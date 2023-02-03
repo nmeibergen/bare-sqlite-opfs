@@ -1,4 +1,3 @@
-import opfsWorker from './src/opfs-worker.js'
 /** 
  * This is how to use this file
  */
@@ -14,4 +13,4 @@ class WorkerBuilder extends Worker {
     }
 }
 
-export default () => new WorkerBuilder(opfsWorker);
+export default () => {}//new WorkerBuilder(opfsWorker);

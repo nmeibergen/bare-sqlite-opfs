@@ -4,8 +4,8 @@ const clearButton = /** @type {HTMLButtonElement} */ (document.getElementById('c
 const initButton = /** @type {HTMLButtonElement} */ (document.getElementById('init'));
 const inputCode = /** @type {HTMLButtonElement} */ (document.getElementById('input-code'));
 
-const worker = new Worker('src/opfs-worker.js') //sqlite3Worker();
-
+// const worker = new Worker('src/opfs-worker.js') //sqlite3Worker();
+const worker = new Worker('src/opfs-worker-module.js', { type: "module" })
 worker.addEventListener('message', async ({
     data
 }) => {

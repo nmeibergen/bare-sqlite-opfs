@@ -10046,10 +10046,10 @@ else if (typeof exports === 'object')
   exports["sqlite3InitModule"] = sqlite3InitModule;
 
 (function(){
-  
+  console.log("Running here..")
   const originalInit = self.sqlite3InitModule;
   if(!originalInit){
-    throw new Error("Expecting self.sqlite3InitModule to be defined by the Emscripten build.");
+    // throw new Error("Expecting self.sqlite3InitModule to be defined by the Emscripten build.");
   }
   
   const initModuleState = self.sqlite3InitModuleState = Object.assign(Object.create(null),{

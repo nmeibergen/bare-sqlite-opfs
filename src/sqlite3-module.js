@@ -1,47 +1,9 @@
-/*
-** LICENSE for the sqlite3 WebAssembly/JavaScript APIs.
-**
-** This bundle (typically released as sqlite3.js or sqlite3-wasmfs.js)
-** is an amalgamation of JavaScript source code from two projects:
-**
-** 1) https://emscripten.org: the Emscripten "glue code" is covered by
-**    the terms of the MIT license and University of Illinois/NCSA
-**    Open Source License, as described at:
-**
-**    https://emscripten.org/docs/introducing_emscripten/emscripten_license.html
-**
-** 2) https://sqlite.org: all code and documentation labeled as being
-**    from this source are released under the same terms as the sqlite3
-**    C library:
-**
-** 2022-10-16
-**
-** The author disclaims copyright to this source code.  In place of a
-** legal notice, here is a blessing:
-**
-** *   May you do good and not evil.
-** *   May you find forgiveness for yourself and forgive others.
-** *   May you share freely, never taking more than you give.
-*/
-/*
-** This code was built from sqlite3 version...
-** 
-*/
+console.log("HERe")
+(function () {
 
-/**
- * @note
- * we included  '= self.sqlite3InitModule' in order for the module to be
- * appended to the workers global scope and as such to be able to be
- * exported when we the worker is ran in module mode. 
- * 
- * As long as it is not ran in module mode a simple 'var' will by definition
- * be attached to self.
- * 
- * @todo Should make this automatic such that this is inserted whenever we 
- * update this file.
- */
-var sqlite3InitModule = self.sqlite3InitModule = (() => {
+    window.sqlite3InitModule = (() => {
   var _scriptDir = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : undefined;
+  
   return (
 function(sqlite3InitModule) {
   sqlite3InitModule = sqlite3InitModule || {};
@@ -10048,83 +10010,12 @@ if('undefined' !== typeof Module){
   return sqlite3InitModule.ready
 }
 );
+    })()
+
+
+
 })();
 
-if (typeof exports === 'object' && typeof module === 'object')
-  module.exports = sqlite3InitModule;
-else if (typeof define === 'function' && define['amd'])
-  define([], function() { return sqlite3InitModule; });
-else if (typeof exports === 'object')
-  exports["sqlite3InitModule"] = sqlite3InitModule;
-
-(function(){
-  const originalInit = self.sqlite3InitModule;
-  if(!originalInit){
-    throw new Error("Expecting self.sqlite3InitModule to be defined by the Emscripten build.");
-  }
-  
-  const initModuleState = self.sqlite3InitModuleState = Object.assign(Object.create(null),{
-    moduleScript: self?.document?.currentScript,
-    isWorker: ('undefined' !== typeof WorkerGlobalScope),
-    location: self.location,
-    urlParams: new URL(self.location.href).searchParams
-  });
-  initModuleState.debugModule =
-    (new URL(self.location.href).searchParams).has('sqlite3.debugModule')
-    ? (...args)=>console.warn('sqlite3.debugModule:',...args)
-    : ()=>{};
-
-  if(initModuleState.urlParams.has('sqlite3.dir')){
-    initModuleState.sqlite3Dir = initModuleState.urlParams.get('sqlite3.dir') +'/';
-  }else if(initModuleState.moduleScript){
-    const li = initModuleState.moduleScript.src.split('/');
-    li.pop();
-    initModuleState.sqlite3Dir = li.join('/') + '/';
-  }
-
-  self.sqlite3InitModule = (...args)=>{
-    
-    return originalInit(...args).then((EmscriptenModule)=>{
-      if(self.window!==self &&
-         (EmscriptenModule['ENVIRONMENT_IS_PTHREAD']
-          || EmscriptenModule['_pthread_self']
-          || 'function'===typeof threadAlert
-          || self.location.pathname.endsWith('.worker.js')
-         )){
-        
-        return EmscriptenModule;
-      }
-      EmscriptenModule.sqlite3.scriptInfo = initModuleState;
-      
-      const f = EmscriptenModule.sqlite3.asyncPostInit;
-      delete EmscriptenModule.sqlite3.asyncPostInit;
-      return f();
-    }).catch((e)=>{
-      console.error("Exception loading sqlite3 module:",e);
-      throw e;
-    });
-  };
-  self.sqlite3InitModule.ready = originalInit.ready;
-
-  if(self.sqlite3InitModuleState.moduleScript){
-    const sim = self.sqlite3InitModuleState;
-    let src = sim.moduleScript.src.split('/');
-    src.pop();
-    sim.scriptDir = src.join('/') + '/';
-  }
-  initModuleState.debugModule('sqlite3InitModuleState =',initModuleState);
-  if(0){
-    console.warn("Replaced sqlite3InitModule()");
-    console.warn("self.location.href =",self.location.href);
-    if('undefined' !== typeof document){
-      console.warn("document.currentScript.src =",
-                   document?.currentScript?.src);
-    }
-  }
-  
-  if (typeof exports === 'object' && typeof module === 'object')
-    module.exports = sqlite3InitModule;
-  else if (typeof exports === 'object')
-    exports["sqlite3InitModule"] = sqlite3InitModule;
-  
-})();
+export {
+    sqlite3InitModule
+};
