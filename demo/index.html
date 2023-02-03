@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <title>Bare SQLite OPFS</title>
+  <style>
+    #controls {
+      margin-top: 1em;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    #file-controls {
+      display: flex;
+    }
+
+    #file-controls > * {
+      margin-right: 0.5em;
+    }
+
+    #controls > * {
+      margin-bottom: 0.5em;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Bare SQLite OPFS <img width="35" src="favicon.png"/></h1>
+  This is an example of the Bare SQLite OPFS connector. It is based on the proposed
+  <a href="https://wicg.github.io/file-system-access/#wellknowndirectory-origin-private-file-system">
+    Origin Private File System
+  </a>
+  and
+  <a href="https://github.com/WICG/file-system-access/blob/main/AccessHandle.md">
+    (synchronous) AccessHandle
+  </a>
+  for local persistent storage. To check query results, check the console. No output is written in this window.
+  <div id="controls">
+    <div id="file-controls">
+      <button id="clear">Clear files</button>
+      <button id="init">Initiate database</button>
+    </div>
+    <textarea id="input-code" rows="10" cols="48">
+CREATE TABLE cars(  
+  id INT PRIMARY KEY NOT NULL,  
+  name TEXT NOT NULL,
+  color_id INT
+);
+CREATE TABLE colors(  
+  id INT PRIMARY KEY NOT NULL,  
+  name TEXT NOT NULL
+);
+
+INSERT INTO cars (id, name, color_id)
+VALUES
+(1, 'honda', 1),
+(2, 'honda', 2),
+(3, 'fiat', 1),
+(4, 'fiat', 2);
+
+INSERT INTO colors (id, name)
+VALUES
+(1, 'yellow'),
+(2, 'green');
+
+SELECT * FROM cars;
+      </textarea>
+    <button id="run">Run query</button>
+  </div>
+  <script src="src/sqlite3-worker1-promiser.js"></script>
+  <script type="module" src="demo/index.js"></script>
+</body>
+
+</html>
