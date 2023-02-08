@@ -1,0 +1,2 @@
+# Usage
+Place the file `sqlite3.wasm` in your public file. Make sure it is reachable via a call to `${origin}/sqlite3.wasm`. Example: If you run in development mode at `http://localhost:300` then the wasm file should be reachable at `http://localhost:300/sqlite3.wasm`.
