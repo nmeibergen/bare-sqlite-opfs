@@ -81,26 +81,35 @@ const sqlite3InitModuleState = self.sqlite3InitModuleState || Object.create(null
 delete self.sqlite3InitModuleState;
 sqlite3InitModuleState.debugModule('self.location =',self.location);
 
-
+/**
+ * @NM
+ * @todo this file is adapted, make sure that make this generic
+ */
 Module['locateFile'] = function(path, prefix) {
-  let theFile;
-  const up = this.urlParams;
-  if(up.has(path)){
-    theFile = up.get(path);
-  }else if(this.sqlite3Dir){
-    theFile = this.sqlite3Dir + path;
-  }else if(this.scriptDir){
-    theFile = this.scriptDir + path;
-  }else{
-    theFile = prefix + path;
-  }
-  sqlite3InitModuleState.debugModule(
-    "locateFile(",arguments[0], ',', arguments[1],")",
-    'sqlite3InitModuleState.scriptDir =',this.scriptDir,
-    'up.entries() =',Array.from(up.entries()),
-    "result =", theFile
-  );
-  return theFile;
+  
+  return `${self.location.origin}/sqlite3.wasm`
+
+  // let theFile;
+  // const up = this.urlParams;
+  // console.log({path})
+  // console.log({prefix})
+  // console.log({path})
+  // if(up.has(path)){
+  //   theFile = up.get(path);
+  // }else if(this.sqlite3Dir){
+  //   theFile = this.sqlite3Dir + path;
+  // }else if(this.scriptDir){
+  //   theFile = this.scriptDir + path;
+  // }else{
+  //   theFile = prefix + path;
+  // }
+  // sqlite3InitModuleState.debugModule(
+  //   "locateFile(",arguments[0], ',', arguments[1],")",
+  //   'sqlite3InitModuleState.scriptDir =',this.scriptDir,
+  //   'up.entries() =',Array.from(up.entries()),
+  //   "result =", theFile
+  // );
+  // return theFile;
 }.bind(sqlite3InitModuleState);
 
 
@@ -10049,7 +10058,7 @@ if('undefined' !== typeof Module){
 }
 );
 })();
-
+console.log(self.value)
 if (typeof exports === 'object' && typeof module === 'object')
   module.exports = sqlite3InitModule;
 else if (typeof define === 'function' && define['amd'])
@@ -10062,12 +10071,12 @@ else if (typeof exports === 'object')
   if(!originalInit){
     throw new Error("Expecting self.sqlite3InitModule to be defined by the Emscripten build.");
   }
-  
+
   const initModuleState = self.sqlite3InitModuleState = Object.assign(Object.create(null),{
     moduleScript: self?.document?.currentScript,
     isWorker: ('undefined' !== typeof WorkerGlobalScope),
     location: self.location,
-    urlParams: new URL(self.location.href).searchParams
+    urlParams: new URL("http://localhost?sqlite.dir=/").searchParams//new URL(self.location.href).searchParams
   });
   initModuleState.debugModule =
     (new URL(self.location.href).searchParams).has('sqlite3.debugModule')
