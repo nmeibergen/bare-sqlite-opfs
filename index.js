@@ -13,4 +13,4 @@ class WorkerBuilder extends Worker {
     }
 }
 
-export default () => {}//new WorkerBuilder(opfsWorker);
+export default () => {}
