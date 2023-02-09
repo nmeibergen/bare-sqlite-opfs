@@ -37,6 +37,7 @@
  * As long as it is not ran in module mode a simple 'var' will by definition
  * be attached to self.
  * 
+ * @NM
  * @todo Should make this automatic such that this is inserted whenever we 
  * update this file.
  */
@@ -72,11 +73,6 @@ Module['ready'] = new Promise(function(resolve, reject) {
   readyPromiseReject = reject;
 });
 
-
-
-
-
-
 const sqlite3InitModuleState = self.sqlite3InitModuleState || Object.create(null);
 delete self.sqlite3InitModuleState;
 sqlite3InitModuleState.debugModule('self.location =',self.location);
@@ -87,7 +83,7 @@ sqlite3InitModuleState.debugModule('self.location =',self.location);
  */
 Module['locateFile'] = function(path, prefix) {
   
-  return `${self.location.origin}/sqlite3.wasm`
+  return self.wasmLocation
 
   // let theFile;
   // const up = this.urlParams;
