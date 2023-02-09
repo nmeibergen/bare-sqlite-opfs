@@ -1,1 +1,5 @@
+# dependencies
+/node_modules
+
+# avoid including zip files (in particular related to the sqlite wasm snapshot
 *.zip
