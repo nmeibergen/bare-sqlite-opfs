@@ -14,8 +14,7 @@ import {
 const worker = sqlite3Worker();
 ```
 
-You must set 
-
+You must set additional headers as described [here](https://sqlite.org/wasm/doc/trunk/persistence.md) on the Sqlite wasm page.
 For Create React App this can be done using the approach described [here](https://create-react-app.dev/docs/proxying-api-requests-in-development/#configuring-the-proxy-manually). Do the following: 
 1. Run `yarn add http-proxy-middleware`
 2. Create the file `src/setupProxy.js` and copy/paste the following:
@@ -42,7 +41,8 @@ This project is based on a couple of files that are directly downloaded from Sql
 * sqlite3-opfs-async-proxy: left in its original state
 * sqlite3.js: adapted for the purpose of this project. All changes are identifiable with the 'tag' `@NM` in the code. Adaptions merely consist of 
     1. setting the `sqlite3.wasm` location (check the function `locateFile`); and 
-    2. adding `sqlite3InitModule` to `self` such that it is reachable in the workers scope
+    2. setting the location of sqlite3 opfs async proxy file, search for the place where `self.asyncProxyLocation` is used to set the defaultProxy; and
+    3. adding `sqlite3InitModule` to `self` such that it is reachable in the workers scope
 
 
 These two files can directly be found the donwloadable zip found [here](https://sqlite.org/wasm/uv/snapshot.html).

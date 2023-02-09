@@ -8,6 +8,7 @@ const initListener = addEventListener('message', async ({
 }) => {
     if (data.init) {
         self.wasmLocation = data.wasmLocation;
+        self.asyncProxyLocation = data.asyncProxyLocation
         initWorker();
         removeListener();
     }

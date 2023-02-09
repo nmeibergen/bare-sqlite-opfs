@@ -17,6 +17,7 @@ export default (options = {
   worker.postMessage({
     init: true,
     wasmLocation: new URL("./src/sqlite3.wasm", import.meta.url).href,
+    asyncProxyLocation: new URL("./src/sqlite3-opfs-async-proxy.js", import.meta.url).href,
   })
 
   return worker

@@ -54,16 +54,6 @@ function(sqlite3InitModule) {
 
 
 
-
-
-
-
-
-
-
-
-
-
 var Module = typeof sqlite3InitModule != 'undefined' ? sqlite3InitModule : {};
 
 
@@ -9100,7 +9090,6 @@ sqlite3.initWorker1API = function(){
 
 'use strict';
 self.sqlite3ApiBootstrap.initializers.push(function(sqlite3){
-
 const installOpfsVfs = function callee(options){
   if(!self.SharedArrayBuffer ||
      !self.Atomics ||
@@ -9186,6 +9175,8 @@ const installOpfsVfs = function callee(options){
       opfsVfs.dispose();
       return promiseReject_(err);
     };
+    console.log("options.proxyUri")
+    console.log(options.proxyUri)
     const W = new Worker(options.proxyUri);
     W._originalOnError = W.onerror ;
     W.onerror = function(err){
@@ -9977,8 +9968,13 @@ const installOpfsVfs = function callee(options){
   });
   return thePromise;
 };
-installOpfsVfs.defaultProxyUri =
-  "sqlite3-opfs-async-proxy.js";
+
+/**
+ * @NM
+ */
+installOpfsVfs.defaultProxyUri = self.asyncProxyLocation;
+  // "sqlite3-opfs-async-proxy.js";
+  
 self.sqlite3ApiBootstrap.initializersAsync.push(async (sqlite3)=>{
   if(sqlite3.scriptInfo && !sqlite3.scriptInfo.isWorker){
     return;
