@@ -2,7 +2,6 @@
 This is a bare minimum package to run Sqlite with OPFS in a worker.
 
 # Usage
-
 To initiate the worker simply do the following:
 
 ```
@@ -24,7 +23,10 @@ If for example you are coming from a Create React App (webpack based) then you m
 # API
 To see the functionalities that this bare minimum build provides, simply check out the file `/src/opfs-worker.js`.
 
-# Sqlite3 base files
+# Running the demo
+Simply run `yarn start` and go to `localhost:8000/demo`.
+
+# Sqlite3 base files adaptations
 This project is based on a couple of files that are directly downloaded from Sqlite.org. These are 
 
 * sqlite3-opfs-async-proxy: left in its original state
