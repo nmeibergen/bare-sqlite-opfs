@@ -29,6 +29,8 @@ module.exports = function (app) {
 };
 ```
 
+Note however that if you create a build version of your app, you might need to setup these headers in a different way.
+
 # API
 To see the functionalities that this bare minimum build provides, simply check out the file `/src/opfs-worker.js`.
 
