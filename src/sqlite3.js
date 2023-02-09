@@ -9175,8 +9175,7 @@ const installOpfsVfs = function callee(options){
       opfsVfs.dispose();
       return promiseReject_(err);
     };
-    console.log("options.proxyUri")
-    console.log(options.proxyUri)
+
     const W = new Worker(options.proxyUri);
     W._originalOnError = W.onerror ;
     W.onerror = function(err){
