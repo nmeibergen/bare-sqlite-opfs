@@ -14,7 +14,7 @@ export default (options = {
 
   worker.postMessage({
     init: true,
-    wasmLocation: wasmLocation,
+    wasmLocation: new URL("./src/sqlite3.wasm", import.meta.url).href,
   })
 
 

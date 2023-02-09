@@ -10054,7 +10054,7 @@ if('undefined' !== typeof Module){
 }
 );
 })();
-console.log(self.value)
+
 if (typeof exports === 'object' && typeof module === 'object')
   module.exports = sqlite3InitModule;
 else if (typeof define === 'function' && define['amd'])

@@ -8,17 +8,11 @@ To initiate the worker simply do the following:
 // Retrieve the worker initiator function
 import {
     sqlite3Worker
-} from '<path-to-this-package>/src/opfs-worker-initiatior.mjs'
+} from '<path-to-this-package>'
 
 // Start the worker
-const worker = sqlite3Worker("<path-to-this-package>/src/opfs-worker.js", {
-    // You must place the wasm file somehwere that makes sense to your project
-    wasmLocation: <location-of-the-wasm-file>
-});
+const worker = sqlite3Worker();
 ```
-
-The location of `sqlite3.wasm` depends on your project settings. In the background the `fetch` function is used to retrieve the `wasm` file. 
-If for example you are coming from a Create React App (webpack based) then you might place `sqlite3.wasm` in your public folder and simply set the `<location-of-the-wasm-file>` to `${window.location.origin}/sqlite3.wasm`.
 
 # API
 To see the functionalities that this bare minimum build provides, simply check out the file `/src/opfs-worker.js`.
