@@ -1,3 +1,8 @@
+/**
+ * The initListener is needed to initialise the Sqlite files.
+ * In particular it needs the location of the wasm file which
+ * can only consistently be provided from outside the worker
+ */
 const initListener = addEventListener('message', async ({
     data
 }) => {
@@ -8,12 +13,17 @@ const initListener = addEventListener('message', async ({
     }
 })
 
+/**
+ * Remove the listener directly after initiation
+ */
 const removeListener = () => {
     removeEventListener('message', initListener)
 }
 
+/**
+ * Initialise the worker by importing the sqlite3.js file and defining the worker API
+ */
 const initWorker = () => {
-    console.log(self.location)
     import("./sqlite3.js").then(async () => {
         let db;
         const sqlite3 = await sqlite3InitModule();
