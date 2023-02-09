@@ -13,6 +13,7 @@ const removeListener = () => {
 }
 
 const initWorker = () => {
+    console.log(self.location)
     import("./sqlite3.js").then(async () => {
         let db;
         const sqlite3 = await sqlite3InitModule();

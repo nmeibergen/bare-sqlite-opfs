@@ -1,13 +1,11 @@
-import {
-    sqlite3Worker
-} from '../src/opfs-worker-initiatior.mjs'
+import sqlite3Worker from '..'
 
 const runButton = /** @type {HTMLButtonElement} */ (document.getElementById('run'));
 const clearButton = /** @type {HTMLButtonElement} */ (document.getElementById('clear'));
 const initButton = /** @type {HTMLButtonElement} */ (document.getElementById('init'));
 const inputCode = /** @type {HTMLButtonElement} */ (document.getElementById('input-code'));
 
-const worker = sqlite3Worker("../src/opfs-worker.js", {
+const worker = sqlite3Worker({
     wasmLocation: window.origin + "/demo/sqlite3.wasm"
 });
 

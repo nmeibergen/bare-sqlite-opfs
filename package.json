@@ -3,7 +3,10 @@
   "type": "module",
   "version": "0.0.1",
   "description": "A bare sqlite instance that connects with the origin private file system",
-  "main": "index.js",
+  "exports": {
+    ".": "index.mjs",
+    "./src/*": "src/*"
+  },
   "author": "Nathan Meibergen <njmmeibergen@gmail.com>",
   "license": "MIT",
   "scripts": {
