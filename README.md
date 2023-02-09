@@ -14,6 +14,22 @@ import {
 const worker = sqlite3Worker();
 ```
 
+You must set 
+
+For Create React App this can be done using the approach described [here](https://create-react-app.dev/docs/proxying-api-requests-in-development/#configuring-the-proxy-manually). Do the following: 
+1. Run `yarn add http-proxy-middleware`
+2. Create the file `src/setupProxy.js` and copy/paste the following:
+
+```
+module.exports = function (app) {
+    app.use(function (req, res, next) {
+        res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+        res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+        next();
+    });
+};
+```
+
 # API
 To see the functionalities that this bare minimum build provides, simply check out the file `/src/opfs-worker.js`.
 
