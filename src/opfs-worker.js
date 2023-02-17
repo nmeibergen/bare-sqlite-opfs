@@ -10,16 +10,10 @@ const initListener = addEventListener('message', async ({
         self.wasmLocation = data.wasmLocation;
         self.asyncProxyLocation = data.asyncProxyLocation
         initWorker();
-        removeListener();
     }
+}, {
+    once: true
 })
-
-/**
- * Remove the listener directly after initiation
- */
-const removeListener = () => {
-    removeEventListener('message', initListener)
-}
 
 /**
  * Initialise the worker by importing the sqlite3.js file and defining the worker API
@@ -38,32 +32,45 @@ const initWorker = () => {
             data
         }) => {
             let result;
-            switch (data && data.f) {
-                case 'initialize':
-                    result = initialize(data.filePath);
-                    break;
-                case 'statement':
-                    result = await stmt(data.statement);
-                    break;
-                case 'exec':
-                    const cols = [];
-                    result = await db.exec({
-                        returnValue: "resultRows",
-                        sql: data.statement,
-                        rowMode: 'object', // 'array' (default), 'object', or 'stmt'
-                        columnNames: cols
-                    });
-                    // result.unshift(cols);
-                    break;
-                case 'finalize':
-                    result = await finalize();
-                    break;
-                case 'clear':
-                    result = await clearOPFS();
-                    break;
-                default:
-                    throw new Error(`unrecognized request '${data.f}'`);
+
+            if (!data || !data.func) {
+                postMessage({
+                    error: true,
+                    message: "No (valid) data provided to the Sqlite OPFS worker",
+                })
+                throw new Error("")
             }
+
+            if (data.func === "initialize") {
+                const result = initialize(data.filePath)
+                postMessage(result);
+                return;
+            }
+
+            if (data.func === "clear") {
+                result = await clearOPFS();
+                return;
+            }
+
+            if (!db) {
+                postMessage({
+                    error: true,
+                    message: `Unable to process ${data.func} because no database has been initiated yet.`,
+                })
+            }
+
+            try {
+                const result = await db[data.func](...data.args)
+                postMessage(result);
+            } catch (error) {
+                postMessage({
+                    error: true,
+                    message: "Bare SQLITE OPFS: Unable to process request",
+                    internalError: error
+                })
+                return
+            }
+            
             postMessage(result);
         });
 
