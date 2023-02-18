@@ -1,0 +1,2 @@
+2023-02-13 07:40:48.243 CET [58373] FATAL:  lock file "postmaster.pid" already exists
+2023-02-13 07:40:48.243 CET [58373] HINT:  Is another postmaster (PID 17405) running in data directory "/Users/nathanjulianomeibergen/dev/postgresql-cluster"?

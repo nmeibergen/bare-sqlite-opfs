@@ -5,67 +5,56 @@ const clearButton = /** @type {HTMLButtonElement} */ (document.getElementById('c
 const initButton = /** @type {HTMLButtonElement} */ (document.getElementById('init'));
 const inputCode = /** @type {HTMLButtonElement} */ (document.getElementById('input-code'));
 
-const worker = sqlite3Worker();
+let sqlite3;
+let db;
 
-worker.addEventListener('message', async ({
-    data
-}) => {
-    if (data === "ready") {
-        init();
-    }
-}, {
-    once: true
-});
+(async () => {
+    sqlite3 = await sqlite3Worker();
+})()
 
 // on init db press
 initButton.addEventListener('click', async () => {
-    await init();
+    db = await sqlite3.initializeDB("path/test.db");
 })
 
 // on run press
 runButton.addEventListener('click', async () => {
-    await exec(inputCode.value);
+    await db.exec({
+        returnValue: "resultRows",
+        sql: inputCode.value,
+        rowMode: 'object', // 'array' (default), 'object', or 'stmt'
+        columnNames: []
+    });
 })
 
 // on clear press
-clearButton.addEventListener('click', async () => {
-    await clear();
-})
-
 /**
- * WORKER FUNCTIONS
+ * @note currently used as test function for statement requests.
  */
+clearButton.addEventListener('click', async () => {
+    // prepare test
+    // const result = await db.prepare("SELECT * from cars")
+    // console.log({
+    //     result
+    // })
+    // const res1 = await result.step();
+    // console.log({
+    //     res1
+    // });
+    // const res2 = await result.get({});
+    // console.log({
+    //     res2
+    // })
 
-// Init
-const init = (async () => {
-    await request({
-        f: "initialize",
-        filePath: "path/test.db"
+    // transaction test
+    const resultTransaction = await db.transaction((db) => {
+        const x = db.exec(`
+        INSERT INTO cars (id, name, color_id)
+        VALUES
+        (7, 'skoda', 1)`);
+        return x
     })
-});
 
-// execute statement
-export const exec = (sql) => request({
-    f: "exec",
-    statement: sql
-});
-
-// Clear
-export const clear = async () => request({
-    f: "clear"
-});
-
-// Generic request that waits for worker response to confirm completion
-function request(message) {
-    worker.postMessage(message);
-    return new Promise(function (resolve) {
-        worker.addEventListener('message', function ({
-            data
-        }) {
-            console.log(data)
-            resolve(data);
-        }, {
-            once: true
-        });
-    });
-}
+    // original
+    // await db.clear();
+})

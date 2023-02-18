@@ -11,8 +11,22 @@ import {
 } from '<path-to-this-package>'
 
 // Start the worker
-const worker = sqlite3Worker();
+const sqlite3 = await sqlite3Worker();
+
+// initialise the database
+const db = await sqlite3.initializeDB("path/to/db.db");
+
+// Run your favourite sqlite3 functions on db, like...
+await db.exec(...)
+const stmt = await db.prepare(...)
+await stmt.step()
+const res = await stmt.get(0)
+await db.transaction((db) => {
+    db.exec(...)
+})
 ```
+
+Currently you can only create 1 database per worker. This might change in the future.
 
 You must set additional headers as described [here](https://sqlite.org/wasm/doc/trunk/persistence.md) on the Sqlite wasm page.
 For Create React App this can be done using the approach described [here](https://create-react-app.dev/docs/proxying-api-requests-in-development/#configuring-the-proxy-manually). Do the following: 
@@ -32,7 +46,7 @@ module.exports = function (app) {
 Note however that if you create a build version of your app, you might need to setup these headers in a different way.
 
 # API
-To see the functionalities that this bare minimum build provides, simply check out the file `/src/opfs-worker.js`.
+The follows the exect same as can be found for the official Sqlite Object Oriented API, found [here](https://sqlite.org/wasm/doc/trunk/api-oo1.md#db-transaction). The only difference can be found in initialising the database, as seen in the above example, and in the fact that every method call is done asynchronous, so you will always have to do `await` if you are interested in waiting for the result.
 
 # Running the demo
 Simply run `yarn start` and go to `localhost:8000/demo`.
