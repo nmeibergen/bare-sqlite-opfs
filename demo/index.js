@@ -5,15 +5,16 @@ const clearButton = /** @type {HTMLButtonElement} */ (document.getElementById('c
 const initButton = /** @type {HTMLButtonElement} */ (document.getElementById('init'));
 const inputCode = /** @type {HTMLButtonElement} */ (document.getElementById('input-code'));
 
+let sqlite3;
 let db;
 
 (async () => {
-    db = await sqlite3Worker();
+    sqlite3 = await sqlite3Worker();
 })()
 
 // on init db press
 initButton.addEventListener('click', async () => {
-    await db.initialize("path/test.db")
+    db = await sqlite3.initializeDB("path/test.db");
 })
 
 // on run press
@@ -50,12 +51,8 @@ clearButton.addEventListener('click', async () => {
         const x = db.exec(`
         INSERT INTO cars (id, name, color_id)
         VALUES
-        (5, 'volkswagen', 1)`);
+        (7, 'skoda', 1)`);
         return x
-    })
-
-    console.log({
-        resultTransaction
     })
 
     // original

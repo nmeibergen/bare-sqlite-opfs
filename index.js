@@ -1,4 +1,6 @@
-import { serialiseFunction } from "./src/helper";
+import {
+  serialiseFunction
+} from "./src/helper";
 
 export default async (options = {
   wasmLocation: self.location.origin + "/sqlite3.wasm"
@@ -16,8 +18,7 @@ export default async (options = {
     ...workerOptions
   });
 
-  // The worker must be initiated with the location of the wasm file
-  worker.postMessage({
+  const result = await request(worker, {
     init: true,
     wasmLocation: new URL("./src/sqlite3.wasm",
       import.meta.url).href,
@@ -25,22 +26,44 @@ export default async (options = {
       import.meta.url).href,
   })
 
-  // Wait for the worker to be initiated and return proxyDB
-  return new Promise(function (resolve) {
-    worker.addEventListener('message', function ({
-      data
-    }) {
-      if (data === "ready") {
-        resolve(new ProxyDB(worker))
-      } else {
-        throw new Error("Bare sqlite OPFS > unexpected data retrieved after worker initiation; expected 'ready'.")
-      }
-    }, {
-      once: true
-    });
-  });
+  if (result === "ready") {
+    return new ProxySqlite3(worker);
+  } else {
+    throw Error("Bare SQLITE OPFS > unable to start worker correctly.")
+  }
+
 }
 
+class ProxySqlite3 {
+  worker;
+
+  constructor(_worker) {
+    this.worker = _worker;
+  }
+
+  async clear() {
+    return await request(this.worker, {
+      func: "clear",
+    })
+  }
+
+  async initializeDB(filePath) {
+    const initialized = await request(this.worker, {
+      func: "initialize",
+      filePath,
+    })
+
+    if (initialized) {
+      return new ProxyDB(this.worker);
+    } else {
+      throw Error("Bare SQLITE OPFS > Unable to start database")
+    }
+  }
+}
+
+/**
+ * Currently we only allow for a single database to be created!
+ */
 class ProxyDB {
 
   worker;
@@ -49,80 +72,55 @@ class ProxyDB {
     this.worker = _worker;
   }
 
-  async clear() {
-    return await this.request({
-      func: "clear",
-    })
-  }
-
   /**
    * Below are 'custom' methods only. Methods that require some custom approach in order
    * for them to function as expected in the worker
    */
-
-  async initialize(filePath = "path/test.db") {
-    console.log("Will init")
-    return await this.request({
-      func: "initialize",
-      filePath,
-    })
-  }
 
   /**
    * 
    * @param {(db) => void} callback where db methods are no longer asynchronous
    */
   async transaction(callback) {
-    return await this.request({
-      func: "transaction",
-      args: [
-        serialiseFunction(callback)
-      ]
-    })
-  }
-
-  async exec(...args) {
-    return await this.request({
-      func: "exec",
-      args,
-    })
+    return await request(
+      this.worker, {
+        func: "transaction",
+        args: [
+          serialiseFunction(callback)
+        ]
+      })
   }
 
   async prepare(...args) {
     const {
       statementId
-    } = await this.request({
-      func: "prepare",
-      args,
-    })
+    } = await request(
+      this.worker, {
+        func: "prepare",
+        args,
+      })
     const proxyStatement = new ProxyStatement(this, statementId);
-    console.log({
-      proxyStatement
-    })
     return proxyStatement
   }
 
-  /**
-   * I think it is important to add something like a 'thread' id. such that when sending
-   * the result back and we pass the thread id which can next be used on a piped process.
-   * The piped process should then use the thread id and the request will only complete if the 
-   * pipe id has the required id. Something along these lines...
-   *  */
-  request(message) {
-    const worker = this.worker;
-    worker.postMessage(message);
-    return new Promise(function (resolve) {
-      worker.addEventListener('message', function ({
-        data
-      }) {
-        console.log(data)
-        resolve(data);
-      }, {
-        once: true
-      });
-    });
-  }
+
 }
+
+/**
+ * Set the 'pass-forward' props
+ */
+["exec", "get"].forEach(prop => {
+  ProxyDB.prototype[prop] = async function (...args) {
+    const message = {
+      func: prop,
+      args,
+    }
+
+    console.debug(`Bare SQLITE OPFS > ProxyDB will pass request to worker:`)
+    console.debug(message)
+    return await request(this.worker, message)
+  }
+})
 
 /**
  * Statement finalization in the worker
@@ -131,11 +129,12 @@ const registry = new FinalizationRegistry(({
   db,
   statementId
 }) => {
-  console.log(`Registry > cleanup for statement ${statementId}`);
-  // finalize the statement
+  console.debug(`Bare SQLITE OPFS > Registry > cleanup statement ${statementId}`);
+  db.request({
+    func: 'statementCleanup',
+    statementId: statementId,
+  })
 })
-
-const props = ["step", "get"];
 
 class ProxyStatement {
   statementId;
@@ -153,7 +152,10 @@ class ProxyStatement {
   }
 }
 
-props.forEach(prop => {
+/**
+ * Set the 'pass-forward' props
+ */
+["step", "get"].forEach(prop => {
   ProxyStatement.prototype[prop] = async function (...args) {
     const message = {
       func: prop,
@@ -161,8 +163,43 @@ props.forEach(prop => {
       args,
     }
 
-    console.debug(`ProxyStatement will execute request:`)
+    console.debug(`Bare SQLITE OPFS > ProxyStatement will pass request to worker:`)
     console.debug(message)
-    return await this.db.request(message)
+    return await request(this.db.worker, message)
   }
 })
+
+/**
+ * @todo 
+ * @important
+ * 
+ * What we need here is the following:
+ * It might happen, due to its async nature, suppose we send two postMessages, where the first one is slow and the second one fast.
+ * The second post has been send while the first is till waiting. Because the second is so fast, it completes before the first at 
+ * worker side. Now the worker sends back the result and first sender might retrieve the result. And thus we have very strange 
+ * behavior from the client perspective. We thus need to make sure that the message we retrieve is always the one that belongs 
+ * to the waiting sender.
+ * 
+ * We can fix this by for example: creating a 'global' promise that lets each sub promise know when it is done. Where the 'global' 
+ * promiser keeps track of all requests and thereby is able to inform all sub promises.
+ * 
+ *  */
+const request = (worker, message) => {
+  worker.postMessage(message);
+  return new Promise(function (resolve) {
+    worker.addEventListener('message', function ({
+      data
+    }) {
+      if (data &&
+        data.error &&
+        data.error === true) {
+        console.debug(`Bare SQLITE OPFS > error thrown in worker:`);
+        console.debug(data);
+        throw new Error('Bare SQLITE OPFS > error thrown in worker. Check the debug log for details');
+      }
+      resolve(data);
+    }, {
+      once: true
+    });
+  });
+}
