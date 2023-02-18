@@ -27,6 +27,15 @@ runButton.addEventListener('click', async () => {
 })
 
 // on clear press
+/**
+ * @note currently used as test function for statement requests.
+ */
 clearButton.addEventListener('click', async () => {
-    await db.clear();
+    const result = await db.prepare("SELECT * from cars")
+    console.log({result})
+    const res1 = await result.step();
+    console.log({res1});
+    const res2 = await result.get({});
+    console.log({res2})
+    // await db.clear();
 })
