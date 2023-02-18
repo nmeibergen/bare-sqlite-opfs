@@ -1,4 +1,5 @@
 import {
+    deserialiseFunction,
     isObject,
     uuidv4
 } from "./helper.js";
@@ -39,6 +40,9 @@ const initWorker = () => {
         addEventListener('message', async ({
             data
         }) => {
+            /**
+             * @todo this sequence of if statements with returns is starting to suck to be honest...
+             */
             console.debug(`Bare SQLITE OPFS worker retrieved data:`)
             console.debug(data)
             let result;
@@ -92,6 +96,20 @@ const initWorker = () => {
                 postMessage({
                     statementId: id
                 });
+                return;
+            }
+
+            if (data.func === "transaction") {
+                /**
+                 * @todo check the existence of args[0]
+                 */
+                const callbackFunction = deserialiseFunction(data.args[0]);
+                console.debug('Run transaction with callback:')
+                console.debug(callbackFunction)
+                const result = db.transaction(() => {
+                    callbackFunction(db);
+                });
+                postMessage(result);
                 return;
             }
 

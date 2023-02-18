@@ -1,3 +1,5 @@
+import { serialiseFunction } from "./src/helper";
+
 export default async (options = {
   wasmLocation: self.location.origin + "/sqlite3.wasm"
 }) => {
@@ -53,6 +55,11 @@ class ProxyDB {
     })
   }
 
+  /**
+   * Below are 'custom' methods only. Methods that require some custom approach in order
+   * for them to function as expected in the worker
+   */
+
   async initialize(filePath = "path/test.db") {
     console.log("Will init")
     return await this.request({
@@ -61,8 +68,17 @@ class ProxyDB {
     })
   }
 
-  async affirmOpen() {
-    return await this.request()
+  /**
+   * 
+   * @param {(db) => void} callback where db methods are no longer asynchronous
+   */
+  async transaction(callback) {
+    return await this.request({
+      func: "transaction",
+      args: [
+        serialiseFunction(callback)
+      ]
+    })
   }
 
   async exec(...args) {

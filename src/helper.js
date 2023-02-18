@@ -23,3 +23,19 @@ export const isObject = (value) => {
     }
     return false
 }
+
+/**
+ * This serialisation is only valid for pure functions.
+ * 
+ * @param {(*) => any} func 
+ * @returns string
+ */
+export const serialiseFunction = (func) => func.toString();
+
+/**
+ * This serialisation is only valid for pure functions.
+ * 
+ * @param {string} str
+ * @returns {(*) => any} func
+ */
+export const deserialiseFunction = (str) => Function(`"use strict"; return (${str})`)();

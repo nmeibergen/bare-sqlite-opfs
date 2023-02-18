@@ -31,11 +31,33 @@ runButton.addEventListener('click', async () => {
  * @note currently used as test function for statement requests.
  */
 clearButton.addEventListener('click', async () => {
-    const result = await db.prepare("SELECT * from cars")
-    console.log({result})
-    const res1 = await result.step();
-    console.log({res1});
-    const res2 = await result.get({});
-    console.log({res2})
+    // prepare test
+    // const result = await db.prepare("SELECT * from cars")
+    // console.log({
+    //     result
+    // })
+    // const res1 = await result.step();
+    // console.log({
+    //     res1
+    // });
+    // const res2 = await result.get({});
+    // console.log({
+    //     res2
+    // })
+
+    // transaction test
+    const resultTransaction = await db.transaction((db) => {
+        const x = db.exec(`
+        INSERT INTO cars (id, name, color_id)
+        VALUES
+        (5, 'volkswagen', 1)`);
+        return x
+    })
+
+    console.log({
+        resultTransaction
+    })
+
+    // original
     // await db.clear();
 })
