@@ -65,3 +65,6 @@ This project is based on a couple of files that are directly downloaded from Sql
 
 
 These two files can directly be found the donwloadable zip found [here](https://sqlite.org/wasm/uv/snapshot.html).
+
+# Testing
+Yep, no testing yet. It sucks, but it will come shortly!

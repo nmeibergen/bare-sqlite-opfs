@@ -1,6 +1,7 @@
 import {
-  serialiseFunction
+  serialiseFunction,
 } from "./src/helper";
+import request from "./src/request";
 
 export default async (options = {
   wasmLocation: self.location.origin + "/sqlite3.wasm"
@@ -26,7 +27,7 @@ export default async (options = {
       import.meta.url).href,
   })
 
-  if (result === "ready") {
+  if (result) {
     return new ProxySqlite3(worker);
   } else {
     throw Error("Bare SQLITE OPFS > unable to start worker correctly.")
@@ -168,38 +169,3 @@ class ProxyStatement {
     return await request(this.db.worker, message)
   }
 })
-
-/**
- * @todo 
- * @important
- * 
- * What we need here is the following:
- * It might happen, due to its async nature, suppose we send two postMessages, where the first one is slow and the second one fast.
- * The second post has been send while the first is till waiting. Because the second is so fast, it completes before the first at 
- * worker side. Now the worker sends back the result and first sender might retrieve the result. And thus we have very strange 
- * behavior from the client perspective. We thus need to make sure that the message we retrieve is always the one that belongs 
- * to the waiting sender.
- * 
- * We can fix this by for example: creating a 'global' promise that lets each sub promise know when it is done. Where the 'global' 
- * promiser keeps track of all requests and thereby is able to inform all sub promises.
- * 
- *  */
-const request = (worker, message) => {
-  worker.postMessage(message);
-  return new Promise(function (resolve) {
-    worker.addEventListener('message', function ({
-      data
-    }) {
-      if (data &&
-        data.error &&
-        data.error === true) {
-        console.debug(`Bare SQLITE OPFS > error thrown in worker:`);
-        console.debug(data);
-        throw new Error('Bare SQLITE OPFS > error thrown in worker. Check the debug log for details');
-      }
-      resolve(data);
-    }, {
-      once: true
-    });
-  });
-}

@@ -16,10 +16,16 @@ let statements = {};
 const initListener = addEventListener('message', async ({
     data
 }) => {
-    if (data.init) {
-        self.wasmLocation = data.wasmLocation;
-        self.asyncProxyLocation = data.asyncProxyLocation
-        initWorker();
+    const message = data.message;
+    if (message.init) {
+        self.wasmLocation = message.wasmLocation;
+        self.asyncProxyLocation = message.asyncProxyLocation
+        if (await initWorker()) {
+            postMessage({
+                id: data.id,
+                result: true
+            })
+        }
     }
 }, {
     once: true
@@ -28,38 +34,50 @@ const initListener = addEventListener('message', async ({
 /**
  * Initialise the worker by importing the sqlite3.js file and defining the worker API
  */
-const initWorker = () => {
-    import("./sqlite3.js").then(async () => {
+const initWorker = async () => {
+    await import("./sqlite3.js")
 
-        sqlite3 = await sqlite3InitModule();
-        if (sqlite3.capi.sqlite3_wasmfs_opfs_dir) {
-            sqlite3.capi.sqlite3_wasmfs_opfs_dir();
-        }
+    sqlite3 = await sqlite3InitModule();
+    if (sqlite3.capi.sqlite3_wasmfs_opfs_dir) {
+        sqlite3.capi.sqlite3_wasmfs_opfs_dir();
+    }
 
-        addEventListener('message', async ({
-            data
-        }) => {
-            try {
-                console.debug(`Bare SQLITE OPFS > worker retrieved data:`);
-                console.debug(data);
-                const result = await handleData(data);
-                console.debug(`Bare SQLITE OPFS > worker result:`)
-                console.debug(result)
-                postMessage(result);
-            } catch (error) {
-                console.debug('Original error')
-                console.debug(error.stack)
-                postMessage({
-                    error: true,
-                    message: error.message,
-                    stack: error.stack
-                })
-            }
+    addEventListener('message', messageListener)
+
+    return true;
+}
+
+const messageListener = async ({
+    data
+}) => {
+    try {
+        const {
+            id,
+            message
+        } = data;
+
+        console.debug(`Bare SQLITE OPFS > worker retrieved data:`);
+        console.debug(message);
+
+        // extract the request id
+
+        const result = await handleData(message);
+        console.debug(`Bare SQLITE OPFS > worker result:`)
+        console.debug(result)
+
+        postMessage({
+            id,
+            result: result
+        });
+    } catch (error) {
+        console.debug('Original error')
+        console.debug(error.stack)
+        postMessage({
+            error: true,
+            message: error.message,
+            stack: error.stack
         })
-
-        // on ready
-        postMessage("ready");
-    })
+    }
 }
 
 const handleData = async (data) => {

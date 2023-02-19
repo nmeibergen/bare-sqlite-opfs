@@ -51,7 +51,7 @@ clearButton.addEventListener('click', async () => {
         const x = db.exec(`
         INSERT INTO cars (id, name, color_id)
         VALUES
-        (7, 'skoda', 1)`);
+        (9, 'skoda', 2)`);
         return x
     })
 
