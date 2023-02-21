@@ -11,14 +11,14 @@ import {
  * responseMap that takes a unique id and attaches the corresponding resolve function.
  */
 
-const RESPONSE_TIMEOUT = 1000;
+const RESPONSE_TIMEOUT = 10000;
 const responseMap = new Map();
 let listenerAdded = false;
 
 const responseHandler = ({
     data
 }) => {
-    console.log({
+    console.debug({
         data
     })
     if (data.error && data.error === true) {

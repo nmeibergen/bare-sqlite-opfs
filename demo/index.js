@@ -4,6 +4,7 @@ const runButton = /** @type {HTMLButtonElement} */ (document.getElementById('run
 const clearButton = /** @type {HTMLButtonElement} */ (document.getElementById('clear'));
 const initButton = /** @type {HTMLButtonElement} */ (document.getElementById('init'));
 const inputCode = /** @type {HTMLButtonElement} */ (document.getElementById('input-code'));
+const testButton = /** @type {HTMLButtonElement} */ (document.getElementById('test'));
 
 let sqlite3;
 let db;
@@ -32,6 +33,10 @@ runButton.addEventListener('click', async () => {
  * @note currently used as test function for statement requests.
  */
 clearButton.addEventListener('click', async () => {
+    await sqlite3.clear();
+})
+
+testButton.addEventListener('click', async () => {
     // prepare test
     // const result = await db.prepare("SELECT * from cars")
     // console.log({
@@ -46,15 +51,46 @@ clearButton.addEventListener('click', async () => {
     //     res2
     // })
 
-    // transaction test
-    const resultTransaction = await db.transaction((db) => {
-        const x = db.exec(`
-        INSERT INTO cars (id, name, color_id)
-        VALUES
-        (9, 'skoda', 2)`);
-        return x
-    })
+    await db.exec(`
+    CREATE TABLE cars(  
+        id INT PRIMARY KEY NOT NULL,  
+        name TEXT NOT NULL,
+        color_id INT
+      );
+      CREATE TABLE colors(  
+        id INT PRIMARY KEY NOT NULL,  
+        name TEXT NOT NULL
+      );
+    `)
 
-    // original
-    // await db.clear();
+    const amount = 1e4;
+    const start = new Date();
+
+    const logTime = () => {
+        const total = (new Date()).getTime() - start.getTime();
+        console.log(`Total time: ${total} ms`);
+    }
+
+    const result = (i) => {
+        i === amount && logTime();
+    }    
+
+    // for (let i = 0; i < amount; i++) {
+    //     db.exec(`
+    //     INSERT INTO cars (id, name, color_id)
+    //     VALUES
+    //     (${i}, 'skoda', 1)
+    //     `).then(_ => result(i + 1));
+    // }
+
+    // transaction test
+    db.transaction((db) => {
+        for (let i = 0; i < 1e5; i++) {
+            db.exec(`
+            INSERT INTO cars (id, name, color_id)
+            VALUES
+            (${i}, 'skoda', 1)
+            `)
+        }
+    }).then(logTime)
 })
