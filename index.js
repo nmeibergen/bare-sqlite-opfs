@@ -79,15 +79,18 @@ class ProxyDB {
    */
 
   /**
-   * 
+   *  
    * @param {(db) => void} callback where db methods are no longer asynchronous
+   * @param {{[k as string]: integer | string}} vars must be 'simple' object of variables
    */
-  async transaction(callback) {
+  async transaction(callback, vars) {
+
     return await request(
       this.worker, {
         func: "transaction",
         args: [
-          serialiseFunction(callback)
+          serialiseFunction(callback),
+          vars,
         ]
       })
   }

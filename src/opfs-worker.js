@@ -51,6 +51,7 @@ const messageListener = async ({
     data
 }) => {
     try {
+        // extract the request id
         const {
             id,
             message
@@ -58,8 +59,6 @@ const messageListener = async ({
 
         console.debug(`Bare SQLITE OPFS > worker retrieved data:`);
         console.debug(message);
-
-        // extract the request id
 
         const result = await handleData(message);
         console.debug(`Bare SQLITE OPFS > worker result:`)
@@ -142,10 +141,11 @@ const handleData = async (data) => {
          * @todo check the existence of args[0]
          */
         const callbackFunction = deserialiseFunction(data.args[0]);
+        const callbackArgs = data.args[1] || {}
         console.debug('Run transaction with callback:')
         console.debug(callbackFunction)
         return db.transaction(() => {
-            callbackFunction(db);
+            callbackFunction(db, callbackArgs);
         });
     }
 

@@ -49,7 +49,26 @@ Note however that if you create a build version of your app, you might need to s
 The follows the exect same as can be found for the official Sqlite Object Oriented (OO) API, found [here](https://sqlite.org/wasm/doc/trunk/api-oo1.md#db-transaction). The only difference can be found in 
 1. initialising the database, as seen in the above example; and 
 2. the fact that every method call is done asynchronous, so you will always have to do `await` if you are interested in waiting for the result; and
-3. the transaction callback to take the db function as argument. In the callback you no longer have to `await` anything because all calls are executed in the worker, meaning its simply following the exact API from the original Sqlite OO docs. Note that the callback **must** be a pure function! This is something we are trying to take care of.
+3. the transaction method:
+
+```
+transaction(callback: (db, args)  => T, args: {[key as string]: any}) => Promise<T>;
+```
+here the callback is a pure function, using `db` as the database instance and the args as the additional arguments that you'd like to provide to the callback. Example:
+
+```
+const db = await sqlite3.initializeDB("path/to/db.db");
+await db.transaction((db, args) => {
+    db.exec(`INSERT INTO ${table} (id, name)
+    VALUES (${id}, ${name})
+    `)
+},
+{
+    table: 'mytable',
+    id: 1,
+    name: 'myname'
+})
+```
 
 # Running the demo
 Simply run `yarn start` and go to `localhost:8000/demo`.

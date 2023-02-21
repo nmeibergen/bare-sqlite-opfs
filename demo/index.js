@@ -73,7 +73,7 @@ testButton.addEventListener('click', async () => {
 
     const result = (i) => {
         i === amount && logTime();
-    }    
+    }
 
     // for (let i = 0; i < amount; i++) {
     //     db.exec(`
@@ -84,13 +84,17 @@ testButton.addEventListener('click', async () => {
     // }
 
     // transaction test
-    db.transaction((db) => {
-        for (let i = 0; i < 1e5; i++) {
+    db.transaction((db, {
+        amount
+    }) => {
+        for (let i = 0; i < amount; i++) {
             db.exec(`
             INSERT INTO cars (id, name, color_id)
             VALUES
             (${i}, 'skoda', 1)
             `)
         }
+    }, {
+        amount
     }).then(logTime)
 })
