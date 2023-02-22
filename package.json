@@ -2,6 +2,7 @@
   "name": "bare-sqlite-opfs",
   "version": "0.0.1",
   "description": "A bare sqlite instance that connects with the origin private file system",
+  "main": "./src/index.js",
   "exports": {
     ".": "./src/index.js",
     "./src/*": "./src/*"
