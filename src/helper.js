@@ -66,19 +66,22 @@ export const getMethods = (obj) => {
  * instance will try to call the toExtend methods at lower levels.
  * 
  * @param {*} toExtend instance of a class
- * @param {*} other instance of another class
+ * @param {*} other instance of another class or list of methods (string[])
+ * @param {(prop) => any} customExtend any function that takes prop and evaluates to the prop to add to the instance
  * @returns {*} extended toExtend instance
  */
-export const extendClassMethods = (toExtend, other) => {
+export const extendClassMethods = (toExtend, other, customExtend) => {
 
     const toExtendMethods = getMethods(toExtend);
-    const otherMethods = getMethods(other);
+    const otherMethods = Array.isArray(other) ? other : getMethods(other);
 
     otherMethods.forEach(prop => {
         if (!toExtendMethods.includes(prop)) {
-            toExtend[prop] = async function (...args) {
-                return other[prop](...args)
-            }
+            toExtend[prop] = customExtend ?
+                customExtend(prop) :
+                async function (...args) {
+                    return other[prop](...args)
+                }
         }
     })
 

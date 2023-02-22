@@ -1,11 +1,14 @@
 import {
+    getMethods,
     isObject,
     objectIsStatement,
 } from "../helper.js";
 import {
     WorkerDB
 } from "./db.js";
-import { WorkerStatement } from "./statement.js";
+import {
+    WorkerStatement
+} from "./statement.js";
 
 let sqlite3;
 let db;
@@ -36,11 +39,19 @@ export const handleRequest = async (data) => {
     }
 
     /**
+     * @todo
+     * It might come in handy to have a clear layer between creating logic and sending a message pack to the main-thread.
+     */
+
+    /**
      * InitializeDB event
      */
     if (data.func === "initializeDB") {
         db = WorkerDB.init(sqlite3, data.filePath);
-        return true
+        return {
+            initialized: true,
+            dbMethods: getMethods(db),
+        }
     }
 
     /**
@@ -106,7 +117,9 @@ export const handleRequest = async (data) => {
     const result = await db[data.func](...data.args);
 
     /**
-     * If the result is a statement we initiate a new statement
+     * If the result is a statement we 
+     * 1. initiate a new statement 
+     * 2. send back the statementId
      */
     if (objectIsStatement(result)) {
         const workerStatement = new WorkerStatement(result);
@@ -116,7 +129,8 @@ export const handleRequest = async (data) => {
         statements.set(id, workerStatement);
 
         return {
-            statementId: id
+            statementId: id,
+            statementMethods: getMethods(workerStatement),
         };
     }
 

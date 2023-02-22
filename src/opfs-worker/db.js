@@ -1,6 +1,4 @@
 import { deserialiseFunction, extendClassMethods } from "../helper";
-import { WorkerStatement } from "./statement";
-
 
 export class WorkerDB {
     db;
