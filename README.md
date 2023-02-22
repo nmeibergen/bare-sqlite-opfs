@@ -70,6 +70,7 @@ await db.transaction((db, args) => {
     name: 'myname'
 })
 ```
+The fact that the transaction follows a slightly different API, and that it requires to be a pure function can be party blocker...
 
 # Running the demo
 Simply run `yarn start` and go to `localhost:8000/demo`.

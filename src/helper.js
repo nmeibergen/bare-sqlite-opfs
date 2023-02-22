@@ -39,3 +39,48 @@ export const serialiseFunction = (func) => func.toString();
  * @returns {(*) => any} func
  */
 export const deserialiseFunction = (str) => Function(`"use strict"; return (${str})`)();
+
+/**
+ * Create a list of all methods on an instance.
+ * 
+ * Used the code issued [here](https://flaviocopes.com/how-to-list-object-methods-javascript/)
+ * 
+ * @param {*} obj 
+ * @returns {string[]} methodnames
+ */
+export const getMethods = (obj) => {
+    let properties = new Set()
+    let currentObj = obj
+    do {
+        Object.getOwnPropertyNames(currentObj).map(item => properties.add(item))
+    } while ((currentObj = Object.getPrototypeOf(currentObj)))
+    return [...properties.keys()].filter(item => typeof obj[item] === 'function')
+}
+
+/**
+ * 
+ * extend the instance of a class (toExtend) with the method props of another instance. 
+ * This is very similar to class inheritance. 
+ * The difference lies in the fact that the two instances still a completely separate. 
+ * Trying to achieve the same using a proxy will trigger errors because the other 
+ * instance will try to call the toExtend methods at lower levels.
+ * 
+ * @param {*} toExtend instance of a class
+ * @param {*} other instance of another class
+ * @returns {*} extended toExtend instance
+ */
+export const extendClassMethods = (toExtend, other) => {
+
+    const toExtendMethods = getMethods(toExtend);
+    const otherMethods = getMethods(other);
+
+    otherMethods.forEach(prop => {
+        if (!(prop in toExtendMethods)) {
+            toExtend[prop] = async function (...args) {
+                return other[prop](...args)
+            }
+        }
+    })
+
+    return toExtend
+}

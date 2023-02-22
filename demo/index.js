@@ -1,4 +1,4 @@
-import sqlite3Worker from '..'
+import sqlite3Worker from '../src'
 
 const runButton = /** @type {HTMLButtonElement} */ (document.getElementById('run'));
 const clearButton = /** @type {HTMLButtonElement} */ (document.getElementById('clear'));
