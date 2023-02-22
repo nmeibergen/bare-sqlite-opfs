@@ -10,7 +10,6 @@ let db;
 let statements = new Map();
 
 const initSqlite = async (wasmLocation, asyncProxyLocation) => {
-    console.debug('INIT')
     self.wasmLocation = wasmLocation;
     self.asyncProxyLocation = asyncProxyLocation;
 
@@ -46,7 +45,7 @@ export const handleRequest = async (data) => {
      * Clear event
      */
     if (data.func === "clear") {
-        return await clearOPFS(data.dbPath);
+        return await clear(data.dbPath);
     }
 
     /**
@@ -90,18 +89,9 @@ export const handleRequest = async (data) => {
             statements.delete(data.statementId);
         }
 
-        const resultIsStatement = isObject(result) && "columnCount" in result;
-
         // check if the statement has been updated, then update statement
         // The pointer of the new and old statement are exactly the same - it makes sense to only keep a reference to the last in our map.
-        if (resultIsStatement) {
-            // console.debug("Bare SQLITE OPFS > Result is still a statement - update and return statement");
-            // console.debug(result);
-
-            // statements.set(data.statementId, result);
-
-            // if the result is still the statement we simply return the statementId 
-            // so the client can continue using it 
+        if (isObject(result) && "columnCount" in result) {
             return {
                 statementId: data.statementId
             };
@@ -121,12 +111,10 @@ export const handleRequest = async (data) => {
  * @todo make this more granular by allowing to delete only a single database for example. 
  * Use the Google docs [here](https://developer.chrome.com/articles/file-system-access/)
  */
-async function clearOPFS() {
+async function clear() {
     const rootDir = await navigator.storage.getDirectory();
     // @ts-ignore
-    for await (const x of rootDir.entries()) {
-        console.log(x)
-        console.debug(`removing ${name}`);
+    for await (const [name] of rootDir.entries()) {
         await rootDir.removeEntry(name, {
             recursive: true
         }).catch(() => {});
