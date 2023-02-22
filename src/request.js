@@ -15,12 +15,49 @@ const RESPONSE_TIMEOUT = 10000;
 const responseMap = new Map();
 let listenerAdded = false;
 
+/**
+ * Specifically designed for usage in a worker
+ * 
+ * @param {({data}) => any} callback 
+ */
+export const requestListener = (callback, poster, listenerProps = {}) => {
+
+    return addEventListener('message', async ({
+        data
+    }) => {
+        try {
+            const requestId = data.id;
+            const requestData = data.message;
+
+            console.debug(`Bare SQLITE OPFS > worker retrieved data:`);
+            console.debug(requestData);
+
+            const result = await callback(requestData);
+
+            console.debug(`Bare SQLITE OPFS > worker result:`)
+            console.debug(result)
+
+            poster({
+                id: requestId,
+                result,
+            })
+        } catch (error) {
+            console.debug('Original error')
+            console.debug(error.stack)
+            poster({
+                id: requestId,
+                error: true,
+                message: error.message,
+                stack: error.stack
+            })
+        }
+
+    }, listenerProps)
+}
+
 const responseHandler = ({
     data
 }) => {
-    console.debug({
-        data
-    })
     if (data.error && data.error === true) {
         console.debug(`Bare SQLITE OPFS > error thrown in worker:`);
         console.debug(data);

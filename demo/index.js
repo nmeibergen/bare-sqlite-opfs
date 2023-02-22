@@ -1,4 +1,4 @@
-import sqlite3Worker from '..'
+import sqlite3Worker from '../src'
 
 const runButton = /** @type {HTMLButtonElement} */ (document.getElementById('run'));
 const clearButton = /** @type {HTMLButtonElement} */ (document.getElementById('clear'));
@@ -57,13 +57,6 @@ testButton.addEventListener('click', async () => {
         name TEXT NOT NULL,
         color_id INT
       );
-
-      INSERT INTO cars (id, name, color_id)
-        VALUES
-        (1, 'honda', 1),
-        (2, 'honda', 2),
-        (3, 'fiat', 1),
-        (4, 'fiat', 2);
     `)
 
     const amount = 1e4;
@@ -87,21 +80,9 @@ testButton.addEventListener('click', async () => {
     // }
 
     // transaction test
-    // db.transaction((db, {
-    //     amountf
-    // }) => {
-    //     for (let i = 0; i < amount; i++) {
-    //         db.exec(`
-    //         INSERT INTO cars (id, name, color_id)
-    //         VALUES
-    //         (${i}, 'skoda', 1)
-    //         `)
-    //     }
-    // }, {
-    //     amount
-    // }).then(logTime)
-
-    db.transaction((db) => {
+    await db.transaction((db, {
+        amount
+    }) => {
         for (let i = 0; i < amount; i++) {
             db.exec(`
             INSERT INTO cars (id, name, color_id)
@@ -109,14 +90,26 @@ testButton.addEventListener('click', async () => {
             (${i}, 'skoda', 1)
             `)
         }
-    }).then(logTime)
+    }, {
+        amount
+    })
 
-    // const stmt1 = await db.prepare(`SELECT * FROM cars`);
-    // const res = await stmt1.step();
-    // if (res) {
-    //     const x = await stmt1.all();
-    //     console.log({
-    //         x
-    //     });
-    // }
+    // db.transaction((db) => {
+    //     for (let i = 0; i < amount; i++) {
+    //         db.exec(`
+    //         INSERT INTO cars (id, name, color_id)
+    //         VALUES
+    //         (${i}, 'skoda', 1)
+    //         `)
+    //     }
+    // }).then(logTime)
+
+    const stmt1 = await db.prepare(`SELECT * FROM cars`);
+    const res = await stmt1.step();
+    if (res) {
+        const x = await stmt1.all();
+        console.log({
+            x
+        });
+    }
 })
