@@ -80,7 +80,7 @@ testButton.addEventListener('click', async () => {
     // }
 
     // transaction test
-    db.transaction((db, {
+    await db.transaction((db, {
         amount
     }) => {
         for (let i = 0; i < amount; i++) {
@@ -92,7 +92,7 @@ testButton.addEventListener('click', async () => {
         }
     }, {
         amount
-    }).then(logTime)
+    })
 
     // db.transaction((db) => {
     //     for (let i = 0; i < amount; i++) {
@@ -104,12 +104,12 @@ testButton.addEventListener('click', async () => {
     //     }
     // }).then(logTime)
 
-    // const stmt1 = await db.prepare(`SELECT * FROM cars`);
-    // const res = await stmt1.step();
-    // if (res) {
-    //     const x = await stmt1.all();
-    //     console.log({
-    //         x
-    //     });
-    // }
+    const stmt1 = await db.prepare(`SELECT * FROM cars`);
+    const res = await stmt1.step();
+    if (res) {
+        const x = await stmt1.all();
+        console.log({
+            x
+        });
+    }
 })

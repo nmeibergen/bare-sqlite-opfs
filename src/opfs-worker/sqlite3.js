@@ -2,6 +2,7 @@ import {
     getMethods,
     isObject,
     objectIsStatement,
+    uuidv4,
 } from "../helper.js";
 import {
     WorkerDB
@@ -68,8 +69,14 @@ export const handleRequest = async (data) => {
         if (!data.statementId)
             throw new Error(`Bare SQLITE OPFS > running function statementCleanup but no statementID provided, not sure what to cleanup`);
 
-        statements.get(data.statementId).finalize();
-        statements.delete(data.statementId);
+        /**
+         * Finalize and remove the statement because it is no longer needed
+         */
+        const statementToFinalize = statements.get(data.statementId);
+        if (statementToFinalize) {
+            statementToFinalize.finalize();
+            statements.delete(data.statementId);
+        }
         return;
     }
 
@@ -89,13 +96,20 @@ export const handleRequest = async (data) => {
 
         // Get the statement
         const statement = statements.get(data.statementId);
+        console.log("Statement before")
+        console.log({
+            statement
+        })
         if (!statement) {
-            throw new Error(`Bare SQLITE OPFS > Trying to execute statement with id '${statementId}', but it doesn't seem to exist anymore.`)
+            throw new Error(`Bare SQLITE OPFS > Trying to execute statement with id '${data.statementId}', but it doesn't seem to exist anymore.`)
         }
 
         // Execute statement call
         const result = await statement[data.func](...data.args);
-
+        console.log("Statement after")
+        console.log({
+            statement
+        })
         // check if the statement has been finalized
         if (!statement.pointer) {
             console.debug(`Bare SQLITE OPFS > Will delete statement '${data.statementId}' from statement collection`);
@@ -122,7 +136,7 @@ export const handleRequest = async (data) => {
      * 2. send back the statementId
      */
     if (objectIsStatement(result)) {
-        const workerStatement = new WorkerStatement(result);
+        const workerStatement = WorkerStatement.init(result);
 
         // Add the statement to the statement reference array
         const id = uuidv4();

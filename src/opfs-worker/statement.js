@@ -4,11 +4,15 @@ export class WorkerStatement {
 
     statement;
 
-    init(_statement) {
+    static init(_statement) {
         const instance = new WorkerStatement();
         instance.statement = _statement;
 
         return extendClassMethods(instance, instance.statement);
+    }
+
+    get pointer(){
+        return this.statement.pointer
     }
 
     all() {
@@ -17,6 +21,7 @@ export class WorkerStatement {
         while (this.statement.step()) {
             result.push(this.statement.get({}));
         }
+        this.statement.finalize();
         return result;
     }
 

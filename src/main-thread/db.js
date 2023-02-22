@@ -1,8 +1,11 @@
 import {
-    extendClassMethods, serialiseFunction
+    extendClassMethods,
+    serialiseFunction
 } from "../helper";
 import request from "../request";
-import { ProxyStatement } from "./statement"
+import {
+    ProxyStatement
+} from "./statement"
 
 /**
  * Currently we only allow for a single database to be created!
@@ -24,7 +27,23 @@ export class ProxyDB {
                 func: prop,
                 args,
             };
-            return await request(this.worker, message);
+
+            const result = await request(this.worker, message);
+            const {
+                statementId,
+                statementMethods,
+            } = result;
+
+            /**
+             * If the result contains a statementId, we know a statement was created in the worker
+             * Return a proxyStatement instead
+             * */
+            if (statementId) {
+                const proxyStatement = new ProxyStatement(this, statementId, statementMethods);
+                return proxyStatement
+            }
+
+            return result
         })
     }
 
@@ -34,10 +53,6 @@ export class ProxyDB {
      * @param {{[k as string]: integer | string}} vars must be 'simple' object of variables
      */
     async transaction(callback, vars) {
-        // var serialize = require('');
-        // const ser = serialize(callback);
-        // console.log({ser})
-
         return await request(
             this.worker, {
                 func: "transaction",
@@ -47,34 +62,4 @@ export class ProxyDB {
                 ]
             })
     }
-
-    async prepare(...args) {
-        const {
-            statementId
-        } = await request(
-            this.worker, {
-                func: "prepare",
-                args,
-            })
-        const proxyStatement = new ProxyStatement(this, statementId);
-        return proxyStatement
-    }
-
-
 }
-
-/**
- * Set the 'pass-forward' props
- */
-["exec", "get"].forEach(prop => {
-    ProxyDB.prototype[prop] = async function (...args) {
-        const message = {
-            func: prop,
-            args,
-        }
-
-        console.debug(`Bare SQLITE OPFS > ProxyDB will pass request to worker:`)
-        console.debug(message)
-        return await request(this.worker, message)
-    }
-})

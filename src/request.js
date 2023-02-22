@@ -25,7 +25,6 @@ export const requestListener = (callback, poster, listenerProps = {}) => {
     return addEventListener('message', async ({
         data
     }) => {
-        console.debug({data})
         try {
             const requestId = data.id;
             const requestData = data.message;
@@ -59,9 +58,6 @@ export const requestListener = (callback, poster, listenerProps = {}) => {
 const responseHandler = ({
     data
 }) => {
-    console.debug({
-        data
-    })
     if (data.error && data.error === true) {
         console.debug(`Bare SQLITE OPFS > error thrown in worker:`);
         console.debug(data);

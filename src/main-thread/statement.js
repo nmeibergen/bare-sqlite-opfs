@@ -1,3 +1,6 @@
+import {
+    extendClassMethods
+} from "../helper";
 import request from "../request";
 
 /**
@@ -8,17 +11,21 @@ const registry = new FinalizationRegistry(({
     statementId
 }) => {
     console.debug(`Bare SQLITE OPFS > Registry > cleanup statement ${statementId}`);
-    db.request({
+    request(db.worker, {
         func: 'statementCleanup',
         statementId: statementId,
     })
 })
 
+/**
+ * ProxyStatement
+ * Core lies in passing on the request including the statementId
+ */
 export class ProxyStatement {
     statementId;
     db;
 
-    constructor(_db, _statementId) {
+    constructor(_db, _statementId, statementMethods) {
         this.db = _db;
         this.statementId = _statementId;
 
@@ -26,23 +33,25 @@ export class ProxyStatement {
         registry.register(this, {
             db: this.db,
             statementId: this.statementId
+        });
+
+        extendClassMethods(this, statementMethods, (prop) => async (...args) => {
+            const message = {
+                func: prop,
+                statementId: this.statementId,
+                args,
+            };
+            const result = await request(this.db.worker, message);
+
+            const {
+                statementId
+            } = result;
+
+            if (statementId) {
+                if (statementId !== this.statementId) throw new Error("Bare Sqlite OPFS > Retrieved a different statement from the worker than expected")
+                return this
+            }
+            return result
         })
     }
 }
-
-/**
- * Set the 'pass-forward' props
- */
-["step", "get", "bind", "all"].forEach(prop => {
-    ProxyStatement.prototype[prop] = async function (...args) {
-        const message = {
-            func: prop,
-            statementId: this.statementId,
-            args,
-        }
-
-        console.debug(`Bare SQLITE OPFS > ProxyStatement will pass request to worker:`)
-        console.debug(message)
-        return await request(this.db.worker, message)
-    }
-})
