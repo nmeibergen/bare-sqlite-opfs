@@ -75,7 +75,7 @@ export const extendClassMethods = (toExtend, other) => {
     const otherMethods = getMethods(other);
 
     otherMethods.forEach(prop => {
-        if (!(prop in toExtendMethods)) {
+        if (!toExtendMethods.includes(prop)) {
             toExtend[prop] = async function (...args) {
                 return other[prop](...args)
             }

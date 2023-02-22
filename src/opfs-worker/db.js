@@ -1,4 +1,4 @@
-import { extendClassMethods } from "../helper";
+import { deserialiseFunction, extendClassMethods } from "../helper";
 import { WorkerStatement } from "./statement";
 
 
@@ -18,8 +18,6 @@ export class WorkerDB {
          */
         const callbackFunction = deserialiseFunction(args[0]);
         const callbackArgs = args[1] || {};
-        console.debug('Run transaction with callback:');
-        console.debug(callbackFunction)
         return this.db.transaction(() => {
             callbackFunction(this.db, callbackArgs);
         });
