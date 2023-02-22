@@ -84,3 +84,5 @@ export const extendClassMethods = (toExtend, other) => {
 
     return toExtend
 }
+
+export const objectIsStatement = (obj) => isObject(obj) && "columnCount" in obj

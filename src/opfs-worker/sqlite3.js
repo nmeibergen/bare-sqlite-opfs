@@ -1,9 +1,11 @@
 import {
-    deserialiseFunction,
     isObject,
-    uuidv4,
-    extendClassMethods
+    objectIsStatement,
 } from "../helper.js";
+import {
+    WorkerDB
+} from "./db.js";
+import { WorkerStatement } from "./statement.js";
 
 let sqlite3;
 let db;
@@ -37,7 +39,7 @@ export const handleRequest = async (data) => {
      * InitializeDB event
      */
     if (data.func === "initializeDB") {
-        db = WorkerDB.init(data.filePath);
+        db = WorkerDB.init(sqlite3, data.filePath);
         return true
     }
 
@@ -91,7 +93,7 @@ export const handleRequest = async (data) => {
 
         // check if the statement has been updated, then update statement
         // The pointer of the new and old statement are exactly the same - it makes sense to only keep a reference to the last in our map.
-        if (isObject(result) && "columnCount" in result) {
+        if (objectIsStatement(result)) {
             return {
                 statementId: data.statementId
             };
@@ -101,10 +103,24 @@ export const handleRequest = async (data) => {
     }
 
     console.debug(`Bare SQLITE OPFS > perform '${data.func}' on database`)
-    console.debug({
-        db
-    })
-    return await db[data.func](...data.args)
+    const result = await db[data.func](...data.args);
+
+    /**
+     * If the result is a statement we initiate a new statement
+     */
+    if (objectIsStatement(result)) {
+        const workerStatement = new WorkerStatement(result);
+
+        // Add the statement to the statement reference array
+        const id = uuidv4();
+        statements.set(id, workerStatement);
+
+        return {
+            statementId: id
+        };
+    }
+
+    return result
 }
 
 /**
@@ -118,78 +134,5 @@ async function clear() {
         await rootDir.removeEntry(name, {
             recursive: true
         }).catch(() => {});
-    }
-}
-
-class WorkerDB {
-    db;
-
-    static init(filePath) {
-        const instance = new WorkerDB();
-        instance.db = new sqlite3.opfs.OpfsDb(filePath);
-
-        return extendClassMethods(instance, instance.db);
-    }
-
-    prepare(...args) {
-        const statement = this.db.prepare(...args);
-        const workerStatement = new WorkerStatement(statement);
-
-        // Add the statement to the statement reference array
-        const id = uuidv4();
-        statements.set(id, workerStatement);
-
-        return {
-            statementId: id
-        };
-    }
-
-    transaction(...args) {
-        /**
-         * @todo check the existence of args[0]
-         */
-        const callbackFunction = deserialiseFunction(args[0]);
-        const callbackArgs = args[1] || {};
-        console.debug('Run transaction with callback:');
-        console.debug(callbackFunction)
-        return this.db.transaction(() => {
-            callbackFunction(this.db, callbackArgs);
-        });
-    }
-}
-
-class WorkerStatement {
-
-    statement;
-
-    init(_statement) {
-        const instance = new WorkerStatement();
-        instance.statement = _statement;
-
-        return extendClassMethods(instance, instance.statement);
-    }
-
-    all() {
-        const result = []
-        this.statement.reset(); // reset to make sure we really get all data
-        while (this.statement.step()) {
-            result.push(this.statement.get({}));
-        }
-        return result;
-    }
-
-    /**
-     * Only difference with regular bind is that we 'fix' the arguments provided to be 
-     * ones and zeros in case booleans are provided. Very natural change
-     * @param  {...any} args 
-     */
-    bind(...args) {
-        const newArgs = args.map((value) => {
-            if (typeof value === 'boolean') {
-                return value ? 1 : 0
-            }
-            return value
-        })
-        this.statement.bind(...newArgs);
     }
 }
