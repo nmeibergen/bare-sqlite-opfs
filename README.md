@@ -49,7 +49,8 @@ Note however that if you create a build version of your app, you might need to s
 The follows the exect same as can be found for the official Sqlite Object Oriented (OO) API, found [here](https://sqlite.org/wasm/doc/trunk/api-oo1.md#db-transaction). The only difference can be found in 
 1. initialising the database, as seen in the above example; and 
 2. the fact that every method call is done asynchronous, so you will always have to do `await` if you are interested in waiting for the result; and
-3. the transaction method:
+3. `db.all() => {[k as key]: integer | string}[]` function on statement allows you to retrieve all data from a statement - if it returns any of course; and
+4. the transaction method:
 
 ```
 transaction(callback: (db, args)  => T, args: {[key as string]: any}) => Promise<T>;

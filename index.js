@@ -1,6 +1,7 @@
 import {
   serialiseFunction,
 } from "./src/helper";
+import "serialize-javascript"
 import request from "./src/request";
 
 export default async (options = {
@@ -42,9 +43,10 @@ class ProxySqlite3 {
     this.worker = _worker;
   }
 
-  async clear() {
+  async clear(dbPath) {
     return await request(this.worker, {
       func: "clear",
+      dbPath,
     })
   }
 
@@ -84,15 +86,17 @@ class ProxyDB {
    * @param {{[k as string]: integer | string}} vars must be 'simple' object of variables
    */
   async transaction(callback, vars) {
+    const ser = serializeJavascript(callback);
+    console.log({ser})
 
-    return await request(
-      this.worker, {
-        func: "transaction",
-        args: [
-          serialiseFunction(callback),
-          vars,
-        ]
-      })
+    // return await request(
+    //   this.worker, {
+    //     func: "transaction",
+    //     args: [
+    //       serialiseFunction(callback),
+    //       vars,
+    //     ]
+    //   })
   }
 
   async prepare(...args) {
@@ -159,7 +163,7 @@ class ProxyStatement {
 /**
  * Set the 'pass-forward' props
  */
-["step", "get"].forEach(prop => {
+["step", "get", "bind", "all"].forEach(prop => {
   ProxyStatement.prototype[prop] = async function (...args) {
     const message = {
       func: prop,

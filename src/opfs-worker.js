@@ -6,7 +6,7 @@ import {
 
 let sqlite3;
 let db;
-let statements = {};
+let statements = new Map();
 
 /**
  * The initListener is needed to initialise the Sqlite files.
@@ -84,6 +84,10 @@ const handleData = async (data) => {
      * @todo this sequence of if statements with returns is starting to suck to be honest...
      */
 
+    /**
+     * @todo We should extend the original database and statement classes with additional functions
+     */
+
     if (!data || !data.func) {
         throw new Error("No (valid) data provided to the Sqlite OPFS worker");
     }
@@ -99,7 +103,7 @@ const handleData = async (data) => {
      * Clear event
      */
     if (data.func === "clear") {
-        return await clearOPFS();
+        return await clearOPFS(data.dbPath);
     }
 
     /**
@@ -109,8 +113,8 @@ const handleData = async (data) => {
         if (!data.statementId)
             throw new Error(`Bare SQLITE OPFS > running function statementCleanup but no statementID provided, not sure what to cleanup`);
 
-        statements[data.statementId].finalize();
-        delete statements[data.statementId]
+        statements.get(data.statementId).finalize();
+        statements.delete(data.statementId);
         return;
     }
 
@@ -129,7 +133,7 @@ const handleData = async (data) => {
 
         // Add the statement to the statement reference array
         const id = uuidv4();
-        statements[id] = result;
+        statements.set(id, result);
 
         return {
             statementId: id
@@ -153,23 +157,45 @@ const handleData = async (data) => {
      * Statement method call
      */
     if (data.statementId) {
-        if (!(data.statementId in statements)) {
+        console.debug(`Bare SQLITE OPFS > statement execution of '${data.func}', with args:`)
+        console.debug(data.args)
+
+        // Get the statement
+        const statement = statements.get(data.statementId);
+        if (!statement) {
             throw new Error(`Bare SQLITE OPFS > Trying to execute statement with id '${statementId}', but it doesn't seem to exist anymore.`)
         }
 
-        // Execute statement call
-        const statement = statements[data.statementId];
+        if (data.func === "all") {
+            const result = []
+            statement.reset(); // reset to make sure we really get all data
+            while (statement.step()) {
+                result.push(statement.get({}));
+            }
+            return result;
+        }
+
+        // Execute generic statement call
         const result = await statement[data.func](...data.args);
 
         // check if the statement has been finalized
         if (!statement.pointer) {
             console.debug(`Bare SQLITE OPFS > Will delete statement '${data.statementId}' from statement collection`);
-            delete statements[data.statementId];
+            statements.delete(data.statementId);
         }
 
-        // if the result is still the statement we simply return the statementId 
-        // so the client can continue using it 
-        if (isObject(result) && "columnCount" in result) {
+        const resultIsStatement = isObject(result) && "columnCount" in result;
+
+        // check if the statement has been updated, then update statement
+        // The pointer of the new and old statement are exactly the same - it makes sense to only keep a reference to the last in our map.
+        if (resultIsStatement) {
+            console.debug("Bare SQLITE OPFS > Result is still a statement - update and return statement");
+            console.debug(result);
+
+            statements.set(data.statementId, result);
+
+            // if the result is still the statement we simply return the statementId 
+            // so the client can continue using it 
             return {
                 statementId: data.statementId
             };
@@ -191,10 +217,15 @@ const initialize = (filePath) => {
     }
 }
 
+/**
+ * @todo make this more granular by allowing to delete only a single database for example. 
+ * Use the Google docs [here](https://developer.chrome.com/articles/file-system-access/)
+ */
 async function clearOPFS() {
     const rootDir = await navigator.storage.getDirectory();
     // @ts-ignore
-    for await (const [name] of rootDir.entries()) {
+    for await (const x of rootDir.entries()) {
+        console.log(x)
         console.debug(`removing ${name}`);
         await rootDir.removeEntry(name, {
             recursive: true

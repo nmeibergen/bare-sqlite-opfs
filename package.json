@@ -13,5 +13,8 @@
   },
   "devDependencies": {
     "@web/dev-server": "^0.1.35"
+  },
+  "dependencies": {
+    "serialize-javascript": "^6.0.1"
   }
 }

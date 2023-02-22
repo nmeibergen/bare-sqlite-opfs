@@ -15,7 +15,7 @@ let db;
 
 // on init db press
 initButton.addEventListener('click', async () => {
-    db = await sqlite3.initializeDB("path/test.db");
+    db = await sqlite3.initializeDB("watermelon/temp.db");
 })
 
 // on run press
@@ -57,10 +57,13 @@ testButton.addEventListener('click', async () => {
         name TEXT NOT NULL,
         color_id INT
       );
-      CREATE TABLE colors(  
-        id INT PRIMARY KEY NOT NULL,  
-        name TEXT NOT NULL
-      );
+
+      INSERT INTO cars (id, name, color_id)
+        VALUES
+        (1, 'honda', 1),
+        (2, 'honda', 2),
+        (3, 'fiat', 1),
+        (4, 'fiat', 2);
     `)
 
     const amount = 1e4;
@@ -84,9 +87,21 @@ testButton.addEventListener('click', async () => {
     // }
 
     // transaction test
-    db.transaction((db, {
-        amount
-    }) => {
+    // db.transaction((db, {
+    //     amountf
+    // }) => {
+    //     for (let i = 0; i < amount; i++) {
+    //         db.exec(`
+    //         INSERT INTO cars (id, name, color_id)
+    //         VALUES
+    //         (${i}, 'skoda', 1)
+    //         `)
+    //     }
+    // }, {
+    //     amount
+    // }).then(logTime)
+
+    db.transaction((db) => {
         for (let i = 0; i < amount; i++) {
             db.exec(`
             INSERT INTO cars (id, name, color_id)
@@ -94,7 +109,14 @@ testButton.addEventListener('click', async () => {
             (${i}, 'skoda', 1)
             `)
         }
-    }, {
-        amount
     }).then(logTime)
+
+    // const stmt1 = await db.prepare(`SELECT * FROM cars`);
+    // const res = await stmt1.step();
+    // if (res) {
+    //     const x = await stmt1.all();
+    //     console.log({
+    //         x
+    //     });
+    // }
 })
