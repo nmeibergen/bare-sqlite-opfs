@@ -1,7 +1,6 @@
 import {
   serialiseFunction,
 } from "./src/helper";
-import "serialize-javascript"
 import request from "./src/request";
 
 export default async (options = {
@@ -86,17 +85,18 @@ class ProxyDB {
    * @param {{[k as string]: integer | string}} vars must be 'simple' object of variables
    */
   async transaction(callback, vars) {
-    const ser = serializeJavascript(callback);
-    console.log({ser})
+    // var serialize = require('');
+    // const ser = serialize(callback);
+    // console.log({ser})
 
-    // return await request(
-    //   this.worker, {
-    //     func: "transaction",
-    //     args: [
-    //       serialiseFunction(callback),
-    //       vars,
-    //     ]
-    //   })
+    return await request(
+      this.worker, {
+        func: "transaction",
+        args: [
+          serialiseFunction(callback),
+          vars,
+        ]
+      })
   }
 
   async prepare(...args) {
