@@ -96,20 +96,13 @@ export const handleRequest = async (data) => {
 
         // Get the statement
         const statement = statements.get(data.statementId);
-        console.log("Statement before")
-        console.log({
-            statement
-        })
         if (!statement) {
             throw new Error(`Bare SQLITE OPFS > Trying to execute statement with id '${data.statementId}', but it doesn't seem to exist anymore.`)
         }
 
         // Execute statement call
         const result = await statement[data.func](...data.args);
-        console.log("Statement after")
-        console.log({
-            statement
-        })
+
         // check if the statement has been finalized
         if (!statement.pointer) {
             console.debug(`Bare SQLITE OPFS > Will delete statement '${data.statementId}' from statement collection`);
@@ -135,18 +128,27 @@ export const handleRequest = async (data) => {
      * 1. initiate a new statement 
      * 2. send back the statementId
      */
-    if (objectIsStatement(result)) {
-        const workerStatement = WorkerStatement.init(result);
-
-        // Add the statement to the statement reference array
+    if(result instanceof WorkerStatement){
         const id = uuidv4();
-        statements.set(id, workerStatement);
+        statements.set(id, result);
 
         return {
             statementId: id,
-            statementMethods: getMethods(workerStatement),
+            statementMethods: getMethods(result),
         };
     }
+    // if (objectIsStatement(result)) {
+    //     const workerStatement = WorkerStatement.init(result);
+
+    //     // Add the statement to the statement reference array
+        // const id = uuidv4();
+        // statements.set(id, workerStatement);
+
+        // return {
+        //     statementId: id,
+        //     statementMethods: getMethods(workerStatement),
+        // };
+    // }
 
     return result
 }

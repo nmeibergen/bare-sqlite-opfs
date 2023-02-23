@@ -70,7 +70,8 @@ await db.transaction((db, args) => {
     name: 'myname'
 })
 ```
-The fact that the transaction follows a slightly different API, and that it requires to be a pure function can be party blocker...
+
+The `db` follows the exact same API but it is no longer async because everything will be executed directly inside the worker. So no need to await here...
 
 # Running the demo
 Simply run `yarn start` and go to `localhost:8000/demo`.

@@ -29,13 +29,7 @@ export const requestListener = (callback, poster, listenerProps = {}) => {
             const requestId = data.id;
             const requestData = data.message;
 
-            console.debug(`Bare SQLITE OPFS > worker retrieved data:`);
-            console.debug(requestData);
-
             const result = await callback(requestData);
-
-            console.debug(`Bare SQLITE OPFS > worker result:`)
-            console.debug(result)
 
             poster({
                 id: requestId,
@@ -69,6 +63,9 @@ const responseHandler = ({
         result
     } = data;
 
+    console.debug(`Response > ${id}`);
+    console.debug(result);
+
     const resolveFunc = responseMap.get(id);
 
     if (resolveFunc) {
@@ -79,7 +76,8 @@ const responseHandler = ({
 
 export default (worker, message) => {
     const requestId = uuidv4(); // Generate a unique identifier
-    console.debug(`Request > ${requestId}`)
+    console.debug(`Request > ${requestId}`);
+    console.debug(message);
 
     // Include the messageId in the message payload
     const messageWithId = {
@@ -109,7 +107,7 @@ export default (worker, message) => {
         new Promise(function (resolve, reject) {
             setTimeout(function () {
                 responseMap.delete(requestId);
-                reject(new Error('Bare SQLITE OPFS > request timed out'));
+                reject(new Error(`Bare SQLITE OPFS > request timed out - id: '${requestId}'`));
             }, RESPONSE_TIMEOUT);
         })
     ]);

@@ -84,11 +84,11 @@ testButton.addEventListener('click', async () => {
         amount
     }) => {
         for (let i = 0; i < amount; i++) {
-            db.exec(`
+            db.prepare(`
             INSERT INTO cars (id, name, color_id)
             VALUES
-            (${i}, 'skoda', 1)
-            `)
+            (?, 'skoda', 1)
+            `).run(i)
         }
     }, {
         amount
@@ -104,12 +104,24 @@ testButton.addEventListener('click', async () => {
     //     }
     // }).then(logTime)
 
-    const stmt1 = await db.prepare(`SELECT * FROM cars`);
-    const res = await stmt1.step();
-    if (res) {
-        const x = await stmt1.all();
-        console.log({
-            x
-        });
-    }
+    // const stmt1 = await db.prepare(`SELECT * FROM cars`);
+    // const res = await stmt1.step();
+    // if (res) {
+    //     const x = await stmt1.all();
+    //     console.log({
+    //         x
+    //     });
+    // }
+
+    // test pragma
+    // await db.pragma('user_version=2')
+    // const res = await db.pragma('user_version')
+    // console.log({res})
+
+    // // test pragma in transaction
+    // const res = await db.transaction((db) => {
+    //     db.pragma('user_version = 6')
+    //     return db.pragma('user_version')
+    // })
+    // console.log({res})
 })

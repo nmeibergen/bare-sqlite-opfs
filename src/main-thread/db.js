@@ -1,5 +1,6 @@
 import {
     extendClassMethods,
+    isObject,
     serialiseFunction
 } from "../helper";
 import request from "../request";
@@ -29,18 +30,21 @@ export class ProxyDB {
             };
 
             const result = await request(this.worker, message);
-            const {
-                statementId,
-                statementMethods,
-            } = result;
 
-            /**
-             * If the result contains a statementId, we know a statement was created in the worker
-             * Return a proxyStatement instead
-             * */
-            if (statementId) {
-                const proxyStatement = new ProxyStatement(this, statementId, statementMethods);
-                return proxyStatement
+            if (isObject(result)) {
+                const {
+                    statementId,
+                    statementMethods,
+                } = result;
+
+                /**
+                 * If the result contains a statementId, we know a statement was created in the worker
+                 * Return a proxyStatement instead
+                 * */
+                if (statementId) {
+                    const proxyStatement = new ProxyStatement(this, statementId, statementMethods);
+                    return proxyStatement
+                }
             }
 
             return result

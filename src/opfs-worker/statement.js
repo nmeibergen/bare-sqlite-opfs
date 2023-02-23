@@ -1,4 +1,11 @@
-import { extendClassMethods } from "../helper";
+import { extendClassMethods, objectIsStatement } from "../helper";
+
+const cleanArgs = (args) => args.map((value) => {
+    if (typeof value === 'boolean') {
+        return value ? 1 : 0
+    }
+    return value
+})
 
 export class WorkerStatement {
 
@@ -8,15 +15,31 @@ export class WorkerStatement {
         const instance = new WorkerStatement();
         instance.statement = _statement;
 
-        return extendClassMethods(instance, instance.statement);
+        // return extendClassMethods(instance, instance.statement);
+
+        return extendClassMethods(instance, instance.statement, (prop) => (...args) => {
+            const result = instance.statement[prop](...args);
+
+            if (objectIsStatement(result)) {
+                // Verify that pointers are the same
+                if(instance.pointer !== result.pointer){
+                    throw Error("Retrieved an unexpected statement")
+                }
+
+                return instance
+            }
+
+            return result
+        });
     }
 
     get pointer(){
         return this.statement.pointer
     }
 
-    all() {
+    all(...args) {
         const result = []
+        args.length > 0 && this.statement.bind(...cleanArgs(args));
         this.statement.reset(); // reset to make sure we really get all data
         while (this.statement.step()) {
             result.push(this.statement.get({}));
@@ -31,12 +54,12 @@ export class WorkerStatement {
      * @param  {...any} args 
      */
     bind(...args) {
-        const newArgs = args.map((value) => {
-            if (typeof value === 'boolean') {
-                return value ? 1 : 0
-            }
-            return value
-        })
-        this.statement.bind(...newArgs);
+        return this.statement.bind(...cleanArgs(args));
+    }
+
+    run(...args) {
+        args.length > 0 && this.statement.bind(...cleanArgs(args));
+        this.statement.stepFinalize();
+        return true
     }
 }

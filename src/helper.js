@@ -88,4 +88,10 @@ export const extendClassMethods = (toExtend, other, customExtend) => {
     return toExtend
 }
 
+/**
+ * Checks if the provided object a statement
+ * 
+ * @param {*} obj 
+ * @returns {boolean} 
+ */
 export const objectIsStatement = (obj) => isObject(obj) && "columnCount" in obj
