@@ -59,7 +59,7 @@ here the callback is a pure function, using `db` as the database instance and th
 
 ```
 const db = await sqlite3.initializeDB("path/to/db.db");
-await db.transaction((db, args) => {
+await db.transaction((db, { table, id, name }) => {
     db.exec(`INSERT INTO ${table} (id, name)
     VALUES (${id}, ${name})
     `)
