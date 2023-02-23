@@ -88,7 +88,7 @@ testButton.addEventListener('click', async () => {
             INSERT INTO cars (id, name, color_id)
             VALUES
             (?, 'skoda', 1)
-            `).run(i)
+            `).run([i])
         }
     }, {
         amount
