@@ -57,11 +57,6 @@ export class WorkerStatement {
      * @param  {...any} args 
      */
     bind(...args) {
-        console.debug("BIND WITH")
-        console.debug({
-            args
-        })
-
         if (args.length === 1) {
             // pass the arg values array onto the cleaner and pass onto 'base' binder
             if (Array.isArray(args[0]) && args[0].length > 0) {
