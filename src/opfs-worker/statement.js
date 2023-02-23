@@ -1,4 +1,7 @@
-import { extendClassMethods, objectIsStatement } from "../helper";
+import {
+    extendClassMethods,
+    objectIsStatement
+} from "../helper";
 
 const cleanArgs = (args) => args.map((value) => {
     if (typeof value === 'boolean') {
@@ -22,7 +25,7 @@ export class WorkerStatement {
 
             if (objectIsStatement(result)) {
                 // Verify that pointers are the same
-                if(instance.pointer !== result.pointer){
+                if (instance.pointer !== result.pointer) {
                     throw Error("Retrieved an unexpected statement")
                 }
 
@@ -33,18 +36,18 @@ export class WorkerStatement {
         });
     }
 
-    get pointer(){
+    get pointer() {
         return this.statement.pointer
     }
 
-    all(...args) {
+    all(...bindArgs) {
         const result = []
-        args.length > 0 && this.statement.bind(...cleanArgs(args));
-        this.statement.reset(); // reset to make sure we really get all data
-        while (this.statement.step()) {
-            result.push(this.statement.get({}));
+        this.bind(...bindArgs);
+        this.reset(); // reset to make sure we really get all data
+        while (this.step()) {
+            result.push(this.get({}));
         }
-        this.statement.finalize();
+        this.finalize();
         return result;
     }
 
@@ -54,12 +57,31 @@ export class WorkerStatement {
      * @param  {...any} args 
      */
     bind(...args) {
-        return this.statement.bind(...cleanArgs(args));
+        console.debug("BIND WITH")
+        console.debug({
+            args
+        })
+
+        if (args.length === 1) {
+            // pass the arg values array onto the cleaner and pass onto 'base' binder
+            if (Array.isArray(args[0]) && args[0].length > 0) {
+                return this.statement.bind(cleanArgs(args[0]))
+            }
+        } else if (args.length > 1) {
+            // more args provided, then use the 'base' binder only
+            return this.statement.bind(...args);
+        }
     }
 
-    run(...args) {
-        args.length > 0 && this.statement.bind(...cleanArgs(args));
-        this.statement.stepFinalize();
+    /**
+     * 'Simple' executor of a statement. Will return true or throw an error
+     * 
+     * @param  {...any} args evaluate parametrized query with these arguments
+     * @returns {boolean}
+     */
+    run(...bindArgs) {
+        bindArgs.length > 0 && this.bind(...bindArgs);
+        this.stepFinalize();
         return true
     }
 }
